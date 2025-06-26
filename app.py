@@ -133,6 +133,7 @@ class YouTubeProcessor:
             ydl_opts = {
                 'quiet': True,
                 'no_warnings': True,
+                'concurrent_fragment_downloads': 32,
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
