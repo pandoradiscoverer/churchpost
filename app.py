@@ -552,6 +552,8 @@ def generate_facebook_post():
     data = request.get_json()
     text = data.get('text', '').strip()
     topic_hint = data.get('topic_hint', '').strip()
+    youtube_url = data.get('youtube_url', '').strip() if 'youtube_url' in data else None
+    youtube_start = data.get('youtube_start', '').strip() if 'youtube_start' in data else None
     
     if not text:
         return jsonify({'success': False, 'message': 'Testo richiesto per generare il post'})
@@ -560,6 +562,32 @@ def generate_facebook_post():
         success, result = facebook_generator.generate_facebook_post(text, topic_hint)
         
         if success:
+            # Se presenti, aggiungi il link YouTube in coda
+            if youtube_url and youtube_start:
+                def parse_time_to_seconds(time_str):
+                    import re
+                    if not time_str:
+                        return 0
+                    time_str = re.sub(r'[^\d:]', '', time_str)
+                    if len(time_str) == 6 and ':' not in time_str:
+                        hours = int(time_str[:2])
+                        minutes = int(time_str[2:4])
+                        seconds = int(time_str[4:6])
+                    elif ':' in time_str:
+                        parts = time_str.split(':')
+                        if len(parts) == 3:
+                            hours, minutes, seconds = map(int, parts)
+                        elif len(parts) == 2:
+                            hours = 0
+                            minutes, seconds = map(int, parts)
+                        else:
+                            return 0
+                    else:
+                        return 0
+                    return hours * 3600 + minutes * 60 + seconds
+                t_sec = parse_time_to_seconds(youtube_start)
+                sep = '\n\n' if not result.endswith('\n') else '\n'
+                result = f"{result}{sep}Clicca sul seguente link per ascoltare la Parola di DIO: {youtube_url}?t={t_sec}"
             return jsonify({
                 'success': True,
                 'facebook_post': result,
