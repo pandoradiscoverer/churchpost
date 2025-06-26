@@ -1,3 +1,6 @@
+# Description
+Script di installazione e avvio per churchpost: automatizza il setup di Python, ffmpeg e ambiente virtuale, con gestione PATH e messaggi dettagliati.
+
 # Speech-to-Text YouTube & Facebook Post Generator
 
 ## 🚀 Funzionalità principali
