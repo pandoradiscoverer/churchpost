@@ -1,0 +1,6 @@
+Flask==2.3.3
+openai>=1.0.0
+waitress==2.1.2
+werkzeug==2.3.7
+yt-dlp>=2023.7.6
+ffmpeg-python>=0.2.0

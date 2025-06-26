@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech to Text - OpenAI Whisper</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e0e0;
+        }
+
+        .section h2 {
+            color: #4facfe;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 150px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(116, 185, 255, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status.success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f1aeb5 100%);
+            color: #721c24;
+            border: 1px solid #f1aeb5;
+        }
+
+        .status.info {
+            background: linear-gradient(135deg, #cce7ff 0%, #b3d9ff 100%);
+            color: #004085;
+            border: 1px solid #b3d9ff;
+        }
+
+        .text-area {
+            width: 100%;
+            min-height: 300px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: vertical;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .text-area:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .transcription-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid #4facfe;
+        }
+
+        .transcription-meta {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .transcription-text {
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        /* Stili per il modale */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            width: 90%;
+            max-width: 1100px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            overflow: hidden;
+        }
+        .modal.active, .modal-backdrop.active { display: block; }
+        .modal-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h2 { color: white; margin-bottom: 0; }
+        .modal-close-btn { background: none; border: none; color: white; font-size: 2rem; font-weight: bold; cursor: pointer; line-height: 1; }
+        .modal-body { padding: 25px; max-height: 80vh; overflow-y: auto; }
+        .modal-content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .modal-post-text { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 15px; min-height: 200px; white-space: pre-wrap; margin-bottom: 15px; font-family: 'Segoe UI', sans-serif; }
+        #modalGeneratedImage { width: 100%; max-width: 400px; border-radius: 10px; background: #f0f2f5; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        #modalImageContainer { text-align: center; margin-bottom: 15px; }
+        .modal-image-section h3, .modal-post-section h3 { margin-bottom: 15px; color: #4facfe; }
+        .instructions { background: #e3f2fd; border-left: 4px solid #1877f2; padding: 15px; margin-bottom: 20px; border-radius: 4px; font-size: 14px; color: #0d47a1; }
+        @media (max-width: 900px) { .modal-content-grid { grid-template-columns: 1fr; } 
+        .markdown-social strong { color: #1877f2; }
+        .markdown-social em { color: #6c757d; }
+        .markdown-social { font-size: 1.1em; line-height: 1.7; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-microphone"></i> Speech to Text</h1>
+            <p>Trascrivi audio in testo usando OpenAI Whisper</p>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2><i class="fas fa-key"></i> Configurazione OpenAI</h2>
+                <div class="form-group">
+                    <label for="apiKey">API Key OpenAI:</label>
+                    <input type="password" id="apiKey" class="form-control" placeholder="Inserisci la tua API Key OpenAI">
+                </div>
+                <button id="saveApiKey" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Salva API Key
+                </button>
+                <div id="apiStatus"></div>
+            </div>
+
+            <div class="section">
+                <h2><i class="fab fa-youtube"></i> Elaborazione Video YouTube</h2>
+                <div class="form-group">
+                    <label for="youtubeUrl">URL Video YouTube:</label>
+                    <input type="url" id="youtubeUrl" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
+                </div>
+                <div class="controls">
+                    <button id="getVideoInfo" class="btn btn-secondary">
+                        <i class="fas fa-info-circle"></i> Ottieni Info Video
+                    </button>
+                </div>
+                <div id="videoInfo" style="display: none; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px;"></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                    <div class="form-group"><label for="startTime">Tempo Inizio (hh:mm:ss):</label><input type="text" id="startTime" class="form-control" placeholder="00:15:30"></div>
+                    <div class="form-group"><label for="endTime">Tempo Fine (hh:mm:ss):</label><input type="text" id="endTime" class="form-control" placeholder="00:20:00"></div>
+                </div>
+                <button id="processYoutube" class="btn btn-primary"><i class="fab fa-youtube"></i> Elabora Segmento</button>
+                <div id="youtubeStatus"></div>
+            </div>
+            
+            <div class="section">
+                <h2><i class="fas fa-language"></i> Lingua Trascrizione</h2>
+                <select id="languageSelect" class="form-control">
+                    <option value="it">Italiano</option><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="pt">Português</option><option value="auto">Auto-detect</option>
+                </select>
+            </div>
+
+            <div class="section">
+                <h2><i class="fas fa-upload"></i> Upload File Audio (max 25MB)</h2>
+                <div class="file-input-wrapper">
+                    <input type="file" id="audioFile" accept=".wav,.mp3,.m4a,.mp4,.mpeg,.mpga,.webm,.flac">
+                    <button class="btn btn-secondary"><i class="fas fa-upload"></i> Carica File Audio</button>
+                </div>
+                <div id="audioStatus"></div>
+            </div>
+
+            <div class="section">
+                <h2><i class="fas fa-file-alt"></i> Trascrizioni e Azioni</h2>
+                <textarea id="textArea" class="text-area" placeholder="Le trascrizioni appariranno qui..."></textarea>
+                <div id="transcriptions" style="margin-top: 15px;"></div>
+                <hr style="margin: 20px 0;">
+                <div class="controls">
+                    <button id="generateFacebookPost" class="btn btn-success"><i class="fab fa-facebook"></i> Genera Post</button>
+                    <button id="copyText" class="btn btn-secondary"><i class="fas fa-copy"></i> Copia Trascrizioni</button>
+                    <button id="exportText" class="btn btn-primary"><i class="fas fa-download"></i> Esporta TXT</button>
+                    <button id="clearText" class="btn btn-danger"><i class="fas fa-trash"></i> Pulisci Tutto</button>
+                </div>
+                <div id="postStatus"></div>
+                <div id="facebookPostSection" style="display: none; margin-top: 20px;">
+                    <h3>Post Facebook Generato</h3>
+                    <div id="facebookPostContent" style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 20px; white-space: pre-wrap;"></div>
+                    <div class="controls" style="margin-top: 15px;">
+                        <input type="text" id="topicHint" class="form-control" placeholder="Suggerimento per rigenerare (opzionale)">
+                        <button id="regenerateFacebookPost" class="btn btn-secondary"><i class="fas fa-sync"></i> Rigenera Post</button>
+                        <button id="generateImage" class="btn btn-success"><i class="fas fa-palette"></i> Genera Immagine</button>
+                    </div>
+                    <div id="imageStatus"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="previewModalBackdrop" class="modal-backdrop"></div>
+    <div id="previewModal" class="modal">
+        <div class="modal-header">
+            <h2><i class="fab fa-facebook"></i> Preview Post Facebook</h2>
+            <button id="closeModalBtn" class="modal-close-btn">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="instructions"><i class="fas fa-info-circle"></i> <strong>Istruzioni:</strong> Copia il testo e scarica l'immagine, poi incollali su Facebook.</div>
+            <div class="modal-content-grid">
+                <div class="modal-post-section">
+                    <h3><i class="fas fa-file-alt"></i> Testo del Post</h3>
+                    <div id="modalPostContent" class="modal-post-text"></div>
+                    <button id="modalCopyPostBtn" class="btn btn-secondary"><i class="fas fa-copy"></i> Copia Testo</button>
+                </div>
+                <div class="modal-image-section">
+                    <h3><i class="fas fa-image"></i> Immagine Generata</h3>
+                    <div id="modalImageContainer"><img id="modalGeneratedImage" src="" alt="Immagine Generata"></div>
+                    <button id="modalDownloadImageBtn" class="btn btn-primary" style="margin-top: 15px;"><i class="fas fa-download"></i> Scarica Immagine</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SpeechToTextApp {
+            constructor() {
+                this.transcriptions = [];
+                this.currentImageData = null;
+                this.initializeElements();
+                this.bindEvents();
+            }
+
+            initializeElements() {
+                // Mappa di tutti gli elementi del DOM per un facile accesso
+                this.apiKeyInput = document.getElementById('apiKey');
+                this.saveApiKeyBtn = document.getElementById('saveApiKey');
+                this.apiStatus = document.getElementById('apiStatus');
+                
+                this.youtubeUrlInput = document.getElementById('youtubeUrl');
+                this.getVideoInfoBtn = document.getElementById('getVideoInfo');
+                this.videoInfoDiv = document.getElementById('videoInfo');
+                this.startTimeInput = document.getElementById('startTime');
+                this.endTimeInput = document.getElementById('endTime');
+                this.processYoutubeBtn = document.getElementById('processYoutube');
+                this.youtubeStatus = document.getElementById('youtubeStatus');
+                
+                this.languageSelect = document.getElementById('languageSelect');
+                this.audioFileInput = document.querySelector('.file-input-wrapper input[type=file]');
+                this.audioStatus = document.getElementById('audioStatus');
+
+                this.textArea = document.getElementById('textArea');
+                this.transcriptionsDiv = document.getElementById('transcriptions');
+                this.copyTextBtn = document.getElementById('copyText');
+                this.exportTextBtn = document.getElementById('exportText');
+                this.clearTextBtn = document.getElementById('clearText');
+                
+                this.generateFacebookPostBtn = document.getElementById('generateFacebookPost');
+                this.postStatus = document.getElementById('postStatus');
+                this.facebookPostSection = document.getElementById('facebookPostSection');
+                this.facebookPostContent = document.getElementById('facebookPostContent');
+                this.topicHintInput = document.getElementById('topicHint');
+                this.regenerateFacebookPostBtn = document.getElementById('regenerateFacebookPost');
+                
+                this.generateImageBtn = document.getElementById('generateImage');
+                this.imageStatus = document.getElementById('imageStatus');
+
+                // Elementi del modale
+                this.modal = document.getElementById('previewModal');
+                this.modalBackdrop = document.getElementById('previewModalBackdrop');
+                this.closeModalBtn = document.getElementById('closeModalBtn');
+                this.modalPostContent = document.getElementById('modalPostContent');
+                this.modalGeneratedImage = document.getElementById('modalGeneratedImage');
+                this.modalImagePrompt = document.getElementById('modalImagePrompt');
+                this.modalCopyPostBtn = document.getElementById('modalCopyPostBtn');
+                this.modalDownloadImageBtn = document.getElementById('modalDownloadImageBtn');
+            }
+
+            bindEvents() {
+                this.saveApiKeyBtn.addEventListener('click', () => this.saveApiKey());
+                this.getVideoInfoBtn.addEventListener('click', () => this.getVideoInfo());
+                this.processYoutubeBtn.addEventListener('click', () => this.processYoutube());
+                this.audioFileInput.addEventListener('change', (e) => this.handleFileUpload(e));
+                
+                document.querySelector('.file-input-wrapper button').addEventListener('click', () => this.audioFileInput.click());
+                
+                this.clearTextBtn.addEventListener('click', () => this.clearAll());
+                this.copyTextBtn.addEventListener('click', () => this.copyToClipboard(this.textArea.value, this.audioStatus));
+                this.exportTextBtn.addEventListener('click', () => this.exportText());
+                
+                this.generateFacebookPostBtn.addEventListener('click', () => this.generateFacebookPost());
+                this.regenerateFacebookPostBtn.addEventListener('click', () => this.generateFacebookPost());
+                this.generateImageBtn.addEventListener('click', () => this.generateImage());
+
+                this.closeModalBtn.addEventListener('click', () => this.hidePreviewModal());
+                this.modalBackdrop.addEventListener('click', () => this.hidePreviewModal());
+                this.modalCopyPostBtn.addEventListener('click', () => this.copyToClipboard(this.modalPostContent.innerText, this.imageStatus, this.modalCopyPostBtn));
+                this.modalDownloadImageBtn.addEventListener('click', () => this.downloadImage());
+            }
+            
+            async fetchApi(endpoint, body, statusElement, buttonElement = null) {
+                if (buttonElement) buttonElement.disabled = true;
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+                    const result = await response.json();
+                    this.showStatus(statusElement, result.message, result.success ? 'success' : 'error');
+                    return result;
+                } catch (error) {
+                    this.showStatus(statusElement, `Errore di connessione: ${error.message}`, 'error');
+                    return { success: false, message: error.message };
+                } finally {
+                    if (buttonElement) buttonElement.disabled = false;
+                }
+            }
+
+            async saveApiKey() {
+                const apiKey = this.apiKeyInput.value.trim();
+                if (!apiKey) {
+                    this.showStatus(this.apiStatus, 'API Key richiesta', 'error');
+                    return;
+                }
+                await this.fetchApi('/api/set-api-key', { api_key: apiKey }, this.apiStatus, this.saveApiKeyBtn);
+            }
+            
+            async getVideoInfo() {
+                const url = this.youtubeUrlInput.value.trim();
+                if (!url) {
+                    this.showStatus(this.youtubeStatus, 'URL YouTube richiesto', 'error');
+                    return;
+                }
+                this.showStatus(this.youtubeStatus, 'Recupero info...', 'info');
+                const result = await this.fetchApi('/api/youtube-info', { url: url }, this.youtubeStatus, this.getVideoInfoBtn);
+                if (result.success) {
+                    const { title, duration, uploader, view_count } = result.info;
+                    this.videoInfoDiv.innerHTML = `<h4>${title}</h4><p>di ${uploader} - Durata: ${duration} - Visualizzazioni: ${view_count.toLocaleString()}</p>`;
+                    this.videoInfoDiv.style.display = 'block';
+                }
+            }
+
+            async processYoutube() {
+                const body = {
+                    url: this.youtubeUrlInput.value.trim(),
+                    start_time: this.startTimeInput.value.trim(),
+                    end_time: this.endTimeInput.value.trim(),
+                    language: this.languageSelect.value
+                };
+                if (!body.url || !body.start_time || !body.end_time) {
+                    this.showStatus(this.youtubeStatus, 'Compila tutti i campi YouTube', 'error');
+                    return;
+                }
+                this.showStatus(this.youtubeStatus, 'Elaborazione segmento in corso...', 'info');
+                const result = await this.fetchApi('/api/process-youtube', body, this.youtubeStatus, this.processYoutubeBtn);
+                if (result.success) {
+                    this.addTranscription(result.text, result.timestamp, `YouTube (${result.metadata.segment})`);
+                }
+            }
+            
+            async handleFileUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                this.showStatus(this.audioStatus, `Caricamento di "${file.name}"...`, 'info');
+                const formData = new FormData();
+                formData.append('audio_file', file);
+                formData.append('language', this.languageSelect.value);
+
+                try {
+                    const response = await fetch('/api/transcribe-file', { method: 'POST', body: formData });
+                    const result = await response.json();
+                    if (result.success) {
+                        this.addTranscription(result.text, result.timestamp, result.filename);
+                        this.showStatus(this.audioStatus, `"${result.filename}" trascritto con successo.`, 'success');
+                    } else {
+                        this.showStatus(this.audioStatus, result.message, 'error');
+                    }
+                } catch (error) {
+                    this.showStatus(this.audioStatus, `Errore di upload: ${error.message}`, 'error');
+                }
+                event.target.value = ''; // Resetta l'input file
+            }
+            
+            async generateFacebookPost() {
+                const text = this.textArea.value.trim();
+                if (!text) {
+                    this.showStatus(this.postStatus, 'Nessun testo da cui generare il post', 'error');
+                    return;
+                }
+                const body = { text: text, topic_hint: this.topicHintInput.value.trim() };
+                this.showStatus(this.postStatus, 'Generazione post in corso...', 'info');
+                const btn = this.generateFacebookPostBtn;
+                btn.disabled = true;
+                const result = await this.fetchApi('/api/generate-facebook-post', body, this.postStatus);
+                if (result.success) {
+                    this.facebookPostContent.innerHTML = marked.parse(result.facebook_post);
+                    this.facebookPostContent.className = 'markdown-social';
+                    this.facebookPostSection.style.display = 'block';
+                }
+                btn.disabled = false;
+            }
+
+            async generateImage() {
+                const post = this.facebookPostContent.innerText;
+                if (!post) {
+                    this.showStatus(this.imageStatus, 'Genera prima un post', 'error');
+                    return;
+                }
+                this.showStatus(this.imageStatus, 'Generazione immagine in corso...', 'info');
+                const result = await this.fetchApi('/api/generate-image', { facebook_post: post }, this.imageStatus, this.generateImageBtn);
+                if (result.success) {
+                    this.currentImageData = result.image_data;
+                    this.showPreviewModal();
+                }
+            }
+
+            addTranscription(text, timestamp, source) {
+                const id = Date.now();
+                this.transcriptions.push({ id, text, timestamp, source });
+                this.renderTranscriptions();
+                this.updateTextArea();
+            }
+
+            renderTranscriptions() {
+                this.transcriptionsDiv.innerHTML = this.transcriptions.map(t => `
+                    <div class="transcription-item" id="item-${t.id}">
+                        <div class="transcription-meta">
+                            <span><i class="fas fa-clock"></i> ${t.timestamp} - <b>${t.source}</b></span>
+                            <button onclick="app.removeTranscription(${t.id})" class="btn btn-danger" style="padding:5px 10px; font-size:0.8rem;"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <div class="transcription-text">${t.text}</div>
+                    </div>`).join('');
+            }
+            
+            removeTranscription(id) {
+                this.transcriptions = this.transcriptions.filter(t => t.id !== id);
+                this.renderTranscriptions();
+                this.updateTextArea();
+            }
+
+            updateTextArea() {
+                this.textArea.value = this.transcriptions.map(t => `[${t.source} - ${t.timestamp}]\n${t.text}`).join('\n\n---\n\n');
+            }
+
+            clearAll() {
+                if (confirm('Sei sicuro di voler cancellare tutte le trascrizioni e i post generati?')) {
+                    this.transcriptions = [];
+                    this.currentImageData = null;
+                    this.renderTranscriptions();
+                    this.updateTextArea();
+                    this.facebookPostSection.style.display = 'none';
+                    this.facebookPostContent.innerText = '';
+                    this.showStatus(this.audioStatus, 'Tutto cancellato.', 'info');
+                }
+            }
+            
+            async copyToClipboard(text, statusElement, buttonElement = null) {
+                if (!text.trim()) {
+                    this.showStatus(statusElement, 'Nessun testo da copiare', 'error');
+                    return;
+                }
+                await navigator.clipboard.writeText(text);
+                this.showStatus(statusElement, 'Testo copiato!', 'success');
+                if(buttonElement) {
+                    const originalHtml = buttonElement.innerHTML;
+                    buttonElement.innerHTML = '<i class="fas fa-check"></i> Copiato!';
+                    setTimeout(() => { buttonElement.innerHTML = originalHtml; }, 2000);
+                }
+            }
+
+            exportText() {
+                const text = this.textArea.value.trim();
+                if (!text) {
+                    this.showStatus(this.audioStatus, 'Nessun testo da esportare', 'error');
+                    return;
+                }
+                fetch('/api/export-text', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                })
+                .then(res => res.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `trascrizione_${new Date().toISOString().split('T')[0]}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(err => this.showStatus(this.audioStatus, `Esportazione fallita: ${err}`, 'error'));
+            }
+            
+            showPreviewModal() {
+                const postText = this.facebookPostContent.innerText;
+                if (!postText || !this.currentImageData) return;
+                this.modalPostContent.innerHTML = marked.parse(postText);
+                this.modalPostContent.className = 'markdown-social modal-post-text';
+                // Mostra sempre immagine base64
+                this.modalGeneratedImage.src = `data:image/png;base64,${this.currentImageData.image_b64}`;
+                this.modal.classList.add('active');
+                this.modalBackdrop.classList.add('active');
+            }
+
+            hidePreviewModal() {
+                this.modal.classList.remove('active');
+                this.modalBackdrop.classList.remove('active');
+            }
+
+            async downloadImage() {
+                if (!this.currentImageData) return;
+                const btn = this.modalDownloadImageBtn;
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Download...`;
+                try {
+                    // Scarica direttamente l'immagine base64
+                    const b64 = this.currentImageData.image_b64;
+                    const url = `data:image/png;base64,${b64}`;
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `immagine_post_${Date.now()}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } catch(err) {
+                    this.showStatus(this.imageStatus, 'Download fallito. Prova con "Salva immagine con nome".', 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fas fa-download"></i> Scarica Immagine`;
+                }
+            }
+
+            showStatus(element, message, type = 'info') {
+                element.innerHTML = `<div class="status ${type}">${message}</div>`;
+                setTimeout(() => { if (element.innerHTML.includes(message)) element.innerHTML = ''; }, 5000);
+            }
+        }
+
+        let app;
+        document.addEventListener('DOMContentLoaded', () => { app = new SpeechToTextApp(); });
+    </script>
+</body>
+</html>

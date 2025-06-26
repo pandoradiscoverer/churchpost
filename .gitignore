@@ -1,0 +1,34 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.pyo
+
+# Virtual environment
+.venv/
+venv/
+churchpost/
+temp_uploads/
+youtube_downloads/
+# Editor/OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# Logs
+*.log
+
+# VSCode
+.vscode/
+
+# Environment variables
+.env
+.env.*
+
+# ffmpeg download
+ffmpeg.zip
+C:/ffmpeg/
