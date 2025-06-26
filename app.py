@@ -663,14 +663,28 @@ if __name__ == '__main__':
     import webbrowser
     import threading
     import time
+    import shutil
     def open_browser():
-        time.sleep(1)  # Attendi che il server sia partito
+        time.sleep(1)
         url = f"http://localhost:{port}"
-        chrome_path = webbrowser.get(using='chrome').name if 'chrome' in webbrowser._browsers else None
+        chrome_paths = [
+            shutil.which('chrome'),
+            shutil.which('google-chrome'),
+            shutil.which('chromium'),
+            shutil.which('chromium-browser'),
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+        ]
+        chrome_path = next((p for p in chrome_paths if p and os.path.exists(p)), None)
         if chrome_path:
-            webbrowser.get('chrome').open_new(f'--app={url} --new-window')
-        else:
-            webbrowser.open_new(url)
+            import subprocess
+            try:
+                subprocess.Popen([chrome_path, f'--app={url}', '--new-window'])
+                return
+            except Exception:
+                pass
+        # Fallback browser predefinito
+        webbrowser.open_new(url)
     threading.Thread(target=open_browser).start()
     # Usa Waitress per servire l'applicazione
     serve(app, host='0.0.0.0', port=port, threads=4)
