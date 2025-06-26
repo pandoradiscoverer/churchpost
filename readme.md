@@ -1,7 +1,3 @@
-# CHURCH POST AI
-
-_Generatore di post da predicazioni_
-
 # Description
 Script di installazione e avvio per churchpost: automatizza il setup di Python, ffmpeg e ambiente virtuale, con gestione PATH e messaggi dettagliati. Compatibile con Windows (batch) e Linux/macOS (bash).
 
@@ -33,7 +29,6 @@ run.bat
 ```bash
 chmod +x install.sh
 ./install.sh
-./run.sh
 source venv/bin/activate
 python app.py
 ```

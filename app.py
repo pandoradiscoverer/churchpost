@@ -344,11 +344,11 @@ class ImageGenerator:
                     {
                         "role": "system",
                         "content": (
-                            "Riceverai il testo di un post Facebook. "
-                            "Crea un prompt dettagliato e creativo per la generazione di un'immagine evocativa, "
-                            "basato solo sul contenuto del post. "
-                            "Non menzionare social, testo, like, commenti o elementi grafici tipici dei social. "
-                            "Concentrati solo sul messaggio, il tema e le emozioni trasmesse dal post."
+                            "Riceverai il testo di un post Facebook. "+
+                            "Estrai SOLO le informazioni essenziali per generare un prompt di immagine compatto seguendo questa pipeline: "
+                            "[Soggetto + dettagli] + [Azione/Posa] + [Ambiente/Contesto] + [Illuminazione] + [Dettagli fotocamera]. "
+                            "Lo stile deve essere sempre: colori vividi, ampie pennellate, nessun fronzolo, nessun elemento allucinato, nessun testo, nessun riferimento a social o grafica. "
+                            "Rispondi SOLO con il prompt finale, senza spiegazioni."
                         )
                     },
                     {
