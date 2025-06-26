@@ -660,26 +660,17 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"🚀 Avvio server Speech-to-Text su http://localhost:{port}")
     print("📝 Accedi all'applicazione tramite browser")
-import webbrowser
-import threading
-import time
-
-def open_browser():
-    time.sleep(1)  # Attendi che il server sia partito
-    # Chrome modalità app (consigliato, silenzia errori se non trova chrome)
-    url = "http://localhost:5000"
-    chrome_path = webbrowser.get(using='chrome').name if 'chrome' in webbrowser._browsers else None
-    if chrome_path:
-        # Su Windows, Mac e Linux
-        webbrowser.get('chrome').open_new(f'--app={url} --new-window')
-    else:
-        # Fallback: browser di default
-        webbrowser.open_new(url)
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    print(f"🚀 Avvio server Speech-to-Text su http://localhost:{port}")
-    print("📝 Accedi all'applicazione tramite browser")
+    import webbrowser
+    import threading
+    import time
+    def open_browser():
+        time.sleep(1)  # Attendi che il server sia partito
+        url = f"http://localhost:{port}"
+        chrome_path = webbrowser.get(using='chrome').name if 'chrome' in webbrowser._browsers else None
+        if chrome_path:
+            webbrowser.get('chrome').open_new(f'--app={url} --new-window')
+        else:
+            webbrowser.open_new(url)
     threading.Thread(target=open_browser).start()
     # Usa Waitress per servire l'applicazione
     serve(app, host='0.0.0.0', port=port, threads=4)
