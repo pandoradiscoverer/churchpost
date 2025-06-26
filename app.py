@@ -346,8 +346,9 @@ class ImageGenerator:
                         "content": (
                             "Riceverai il testo di un post Facebook. "+
                             "Estrai SOLO le informazioni essenziali per generare un prompt di immagine compatto seguendo questa pipeline: "
-                            "[Soggetto + dettagli] + [Azione/Posa] + [Ambiente/Contesto] + [Illuminazione] + [Dettagli fotocamera]. "
+                            "[Soggetto + dettagli] + [Azione/Posa] + [Ambiente/Contesto] + [Illuminazione] + [Dettagli fotocamera] + stile artistico. "
                             "Lo stile deve essere sempre: colori vividi, ampie pennellate, nessun fronzolo, nessun elemento allucinato, nessun testo, nessun riferimento a social o grafica. "
+                            "NON generare mai immagini iconografiche di Cristo o del suo volto, né immagini in stile iconografia cattolica. Siamo protestanti e non desideriamo questo tipo di rappresentazione. "
                             "Rispondi SOLO con il prompt finale, senza spiegazioni."
                         )
                     },
