@@ -133,7 +133,6 @@ class YouTubeProcessor:
             ydl_opts = {
                 'quiet': True,
                 'no_warnings': True,
-                
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
@@ -169,14 +168,26 @@ class YouTubeProcessor:
             target_size_bytes = target_size_mb * 1024 * 1024
             bitrate = min(128, max(32, (target_size_bytes * 8) // (duration * 1000)))
             
-            # Configurazione yt-dlp per scaricare solo audio
+            # 1. Ottieni info video per capire se era una live
+            ydl_info_opts = {
+                'quiet': True,
+                'no_warnings': True,
+            }
+            with yt_dlp.YoutubeDL(ydl_info_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                is_live = info.get('is_live') or info.get('was_live') or False
+            
+            # 2. Configura yt-dlp per scaricare solo audio
             ydl_opts = {
                 'format': 'worstaudio/worst',
                 'outtmpl': temp_audio,
                 'quiet': True,
                 'no_warnings': True,
-                'concurrent_fragment_downloads': 32,
+                'concurrent_fragment_downloads': 64,
             }
+            # Se era una live, aggiungi l'opzione hls_use_mpegts
+            if is_live:
+                ydl_opts['hls_use_mpegts'] = True
             
             # Scarica il video
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
